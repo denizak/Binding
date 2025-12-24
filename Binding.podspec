@@ -22,10 +22,10 @@ Pod::Spec.new do |spec|
   spec.author       = "Sugeng Wibowo"
   spec.source       = { :git => "https://github.com/supenkwibowo/Binding.git", :tag => "#{spec.version}" }
 
-  spec.source_files  = "Sources", "Sources/**/*.swift"
-  spec.dependency "RxSwift", "~> 6.2.0"
-  spec.dependency "RxRelay", "~> 6.2.0"
-  spec.dependency "RxCocoa", "~> 6.2.0"
+  spec.source_files  = "Sources/**/*.swift"
+  spec.dependency "RxSwift", "~> 6.9.0"
+  spec.dependency "RxRelay", "~> 6.9.0"
+  spec.dependency "RxCocoa", "~> 6.9.0"
 
-  spec.swift_version = '5.1'
+  spec.swift_version = '5.5'
 end

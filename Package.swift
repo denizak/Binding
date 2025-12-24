@@ -12,7 +12,7 @@ let package = Package(
             targets: ["Binding"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/ReactiveX/RxSwift.git", .exact("6.2.0"))
+        .package(url: "https://github.com/ReactiveX/RxSwift.git", .exact("6.9.1"))
     ],
     targets: [
         .target(
