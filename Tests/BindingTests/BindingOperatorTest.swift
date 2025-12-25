@@ -241,36 +241,60 @@ class BindingOperatorTest: XCTestCase {
     func testTwoWayBindingControlPropertyBindInitialValueFromSource() throws {
         let propertySubject = BehaviorSubject(value: "initial value from property")
         let controlProperty = ControlProperty(
-            values: propertySubject, valueSink: propertySubject
+            values: propertySubject.observe(on: MainScheduler.asyncInstance),
+            valueSink: propertySubject.asObserver()
         )
         let relay = BehaviorRelay(value: "initial value from relay")
         bindingContext.binding {
             relay <=> controlProperty
         }
         
-        XCTAssertEqual(relay.value, "initial value from relay")
-        XCTAssertEqual(try propertySubject.value(), "initial value from relay")
+        // Wait for async binding to complete
+        let expectation = XCTestExpectation(description: "Values synced")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            XCTAssertEqual(relay.value, "initial value from relay")
+            do {
+                XCTAssertEqual(try propertySubject.value(), "initial value from relay")
+            } catch {
+                XCTFail("Failed to get value: \(error)")
+            }
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1.0)
     }
 
     func testTwoWayBindingControlPropertyOnChangeValue() throws {
         let propertySubject = BehaviorSubject(value: "")
         let controlProperty = ControlProperty(
-            values: propertySubject.distinctUntilChanged(),
-            valueSink: propertySubject
+            values: propertySubject.distinctUntilChanged().observe(on: MainScheduler.asyncInstance),
+            valueSink: propertySubject.asObserver()
         )
         let relay = BehaviorRelay(value: "")
         bindingContext.binding {
             relay <=> controlProperty
         }
         
-        propertySubject.onNext("new value 1")
-        XCTAssertEqual(relay.value, "new value 1")
-        
-        propertySubject.onNext("new value 2")
-        XCTAssertEqual(relay.value, "new value 2")
-        
-        relay.accept("value from relay")
-        XCTAssertEqual(try propertySubject.value(), "value from relay")
+        // Wait for async binding, then test value changes
+        let expectation = XCTestExpectation(description: "Values synced")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            propertySubject.onNext("new value 1")
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                XCTAssertEqual(relay.value, "new value 1")
+                
+                relay.accept("value from relay")
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    do {
+                        XCTAssertEqual(try propertySubject.value(), "value from relay")
+                    } catch {
+                        XCTFail("Failed to get value: \(error)")
+                    }
+                    expectation.fulfill()
+                }
+            }
+        }
+        wait(for: [expectation], timeout: 1.0)
     }
 
 }

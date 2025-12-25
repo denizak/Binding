@@ -151,17 +151,15 @@ class MemoryLeakTest: XCTestCase {
         weak var weakContext: MultipleBindingsContext?
         
         autoreleasepool { () -> Void in
-            var context: MultipleBindingsContext? = MultipleBindingsContext()
+            let context = MultipleBindingsContext()
             weakContext = context
             
             // Create multiple binding blocks
             for _ in 0..<10 {
-                context?.binding {
-                    context?.$counter.drive(onNext: { _ in })
+                context.binding {
+                    context.$counter.drive(onNext: { _ in })
                 }
             }
-            
-            context = nil
         }
         
         XCTAssertNil(weakContext, "Context with multiple bindings should still deallocate")

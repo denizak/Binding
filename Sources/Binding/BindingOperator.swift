@@ -242,8 +242,8 @@ public func <=> <Value: Equatable> (
     lhs: BehaviorRelay<Value>, rhs: BehaviorRelay<Value>
 ) -> Disposable {
     return CompositeDisposable(
-        lhs.distinctUntilChanged().bind(to: rhs),
-        rhs.distinctUntilChanged().bind(to: lhs)
+        lhs.distinctUntilChanged().observe(on: MainScheduler.asyncInstance).bind(to: rhs),
+        rhs.distinctUntilChanged().skip(1).observe(on: MainScheduler.asyncInstance).bind(to: lhs)
     )
 }
 
@@ -251,7 +251,7 @@ public func <=> <Value: Equatable> (
 ///
 /// This operator establishes bidirectional data flow: changes to the relay
 /// update the control property, and user interactions with the control
-/// update the relay.
+/// update the relay. Uses async scheduling to prevent reentrancy issues.
 ///
 /// - Parameters:
 ///   - relay: The `BehaviorRelay` to bind.
@@ -269,8 +269,8 @@ public func <=> <Value, PropertyType: ControlPropertyType> (
     relay: BehaviorRelay<Value>, property: PropertyType
 ) -> Disposable where PropertyType.Element == Value {
     return CompositeDisposable(
-        relay.asDriver().drive(property),
-        property.bind(to: relay)
+        relay.observe(on: MainScheduler.asyncInstance).bind(to: property),
+        property.skip(1).observe(on: MainScheduler.asyncInstance).bind(to: relay)
     )
 }
 
